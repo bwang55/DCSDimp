@@ -118,7 +118,6 @@ fn caching(ten_dist: Sampler, cache_size: u64, delta: f64, length:usize) -> Vec<
     let mut prev_output: Vec<u64> = vec![0; length + 1];
     let mut total_overalloc: u64 = 0;
     let mut dcsd_observed = vec![0; length + 1];
-    let mut time = 0;
     // This code is currently reporting the scalar value of overallocations
     // Instead, we want to calculate the DCS distribution
     // We need to initialize some vector dcsd_observed, of length T_MAX
@@ -129,22 +128,22 @@ fn caching(ten_dist: Sampler, cache_size: u64, delta: f64, length:usize) -> Vec<
     //delta.
     let mut time = 0;
     loop {
-        for _ in 0..samples_to_issue - 1 {
-            trace_len += 1;
+        if time >= 0{
+            break
+        }
+        // for _ in 0..samples_to_issue -1 {
             let tenancy = ten_dist.sample();
             cache.add_tenancy(tenancy);
-            total_overalloc += cache.get_excess(cache_size);
-            dcsd_observed[cache.size as usize] += 1;
-        }
-        prev_output = dcsd_observed.clone();//Some((total_overalloc as f64) / (trace_len as f64));
+        // }
         time += 1;
-        if time > 1000{
-            break;
         }
-    }
 
 
+    let mut cycles = 0;
     loop {
+        if cycles > 10000{
+            return dcsd_observed.clone();
+        }
         for _ in 0..samples_to_issue -1 {
             trace_len += 1;
             let tenancy = ten_dist.sample();
@@ -153,20 +152,16 @@ fn caching(ten_dist: Sampler, cache_size: u64, delta: f64, length:usize) -> Vec<
             dcsd_observed[cache.size as usize] += 1;
         }
 
-        // for i in get_distribution(&dcsd_observed){
-        //     println!("{}_", i);
+        // if get_distribution_difference(&prev_output, &dcsd_observed) < delta//((total_overalloc as f64) / (trace_len as f64) - prev_output.unwrap()) < delta
+        // {
+        //
+        //     println!("{} this is trace_len", trace_len);
+        //     return dcsd_observed.clone();
+        //
         // }
-
-        if get_distribution_difference(&prev_output, &dcsd_observed) < delta//((total_overalloc as f64) / (trace_len as f64) - prev_output.unwrap()) < delta
-        {
-
-            println!("{} this is trace_len", trace_len);
-            return dcsd_observed.clone();
-
-        }
         prev_output = dcsd_observed.clone();//Some((total_overalloc as f64) / (trace_len as f64));
-        samples_to_issue *= 2;
-        time += 1;
+        // samples_to_issue *= 2;
+        cycles += 1;
     }
 }
 
