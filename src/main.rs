@@ -141,7 +141,7 @@ fn caching(ten_dist: Sampler, cache_size: u64, delta: f64, length:usize) -> Vec<
 
     let mut cycles = 0;
     loop {
-        if cycles > 10000{
+        if cycles > 100000{
             return dcsd_observed.clone();
         }
         for _ in 0..samples_to_issue -1 {
@@ -180,7 +180,7 @@ fn get_sum(input:&Vec<u64>) -> u128{
     let mut index:usize = 0;
     for k in input{
         sum += *k as u128;
-        if index == 9{
+        if index == input.len(){
             break;
         }
         index += 1;
@@ -250,11 +250,13 @@ fn input_to_hashmap() -> (HashMap<u64, f64>, usize) {
 
 fn write(output: Vec<u64>){
     let sum = get_sum(&output);
+    println!("The Sum is {}======================",sum);
     let mut wtr = csv::Writer::from_writer(io::stdout());
     let mut index:usize = 0;
     // keys.sort_unstable();
     wtr.write_record(&["DCS", "probability"]).expect("cannot write");
     for key in output{
+        // wtr.write_record(&[index.to_string(), ((key as f64) .to_string())]);
         wtr.write_record(&[index.to_string(), ((key as f64) / sum as f64).to_string()]).expect("cannot write");
         index += 1;
     }
