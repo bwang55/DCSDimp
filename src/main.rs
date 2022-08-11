@@ -95,9 +95,6 @@ fn get_distribution_difference(a:&Vec<u64>, b:&Vec<u64>) -> f64{
     let leng = a.len();
     let a_dist = get_distribution(a);
     let b_dist = get_distribution(b);
-    // for i in &a_dist{
-    //     println!("{}------------as", i)
-    // }
 
 
     let mut sum:f64 = 0.0;
@@ -110,37 +107,29 @@ fn get_distribution_difference(a:&Vec<u64>, b:&Vec<u64>) -> f64{
 }
 
 
-fn caching(ten_dist: Sampler, cache_size: u64, delta: f64, length:usize) -> Vec<u64> {//HashMap<u64, u64> {
+fn caching(ten_dist: Sampler, cache_size: u64, delta: f64, length:usize) -> Vec<u64> {\
     let mut cache = Simulator::init();
     let mut trace_len: u64 = 0;
     let mut samples_to_issue: u64 = 1024;
     let mut prev_output: Vec<u64> = vec![0; length + 1];
     let mut total_overalloc: u64 = 0;
     let mut dcsd_observed = vec![0; length + 1];
-    // This code is currently reporting the scalar value of overallocations
-    // Instead, we want to calculate the DCS distribution
-    // We need to initialize some vector dcsd_observed, of length T_MAX
-    // At each time step, intead of incrementing total_overalloc, instead we increment
-    // dcsd_observed[cache.size]
-
-    //Convergence should be decided based on total variation distance (L1 Norm) being less than
-    //delta.
     let mut time = 0;
     loop {
+
+        //this part of code is for warmup cycles, but currently unused.
         if time >= 0{
             break
         }
-        // for _ in 0..samples_to_issue -1 {
             let tenancy = ten_dist.sample();
             cache.add_tenancy(tenancy);
-        // }
         time += 1;
         }
 
-
+//
     let mut cycles = 0;
     loop {
-        if cycles > 100000{
+        if cycles > 100000{//this is the main loop, larger numbers of loop gives higher precisions
             return dcsd_observed.clone();
         }
         for _ in 0..samples_to_issue -1 {
@@ -151,15 +140,7 @@ fn caching(ten_dist: Sampler, cache_size: u64, delta: f64, length:usize) -> Vec<
             dcsd_observed[cache.size as usize] += 1;
         }
 
-        // if get_distribution_difference(&prev_output, &dcsd_observed) < delta//((total_overalloc as f64) / (trace_len as f64) - prev_output.unwrap()) < delta
-        // {
-        //
-        //     println!("{} this is trace_len", trace_len);
-        //     return dcsd_observed.clone();
-        //
-        // }
-        prev_output = dcsd_observed.clone();//Some((total_overalloc as f64) / (trace_len as f64));
-        // samples_to_issue *= 2;
+        prev_output = dcsd_observed.clone();
         cycles += 1;
     }
 }
@@ -243,13 +224,10 @@ fn input_to_hashmap() -> (HashMap<u64, f64>, usize) {
 
 fn write(output: Vec<u64>){
     let sum = get_sum(&output);
-    println!("The Sum is {}======================",sum);
     let mut wtr = csv::Writer::from_writer(io::stdout());
     let mut index:usize = 0;
-    // keys.sort_unstable();
     wtr.write_record(&["DCS", "probability"]).expect("cannot write");
     for key in output{
-        // wtr.write_record(&[index.to_string(), ((key as f64) .to_string())]);
         wtr.write_record(&[index.to_string(), ((key as f64) / sum as f64).to_string()]).expect("cannot write");
         index += 1;
     }
@@ -259,7 +237,6 @@ fn write(output: Vec<u64>){
 fn main() {
 
     let test = input_to_hashmap();
-    // let (over_alloc, trace_len) = caching(Sampler::new(test.into_iter()), 10, 0.05);
     let test_1 = caching(Sampler::new(test.0.into_iter()), 10, 0.005, test.1);
     write(test_1);
 
