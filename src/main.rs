@@ -110,7 +110,6 @@ fn get_distribution_difference(a:&Vec<u64>, b:&Vec<u64>) -> f64{
 }
 
 
-
 fn caching(ten_dist: Sampler, cache_size: u64, delta: f64, length:usize) -> Vec<u64> {//HashMap<u64, u64> {
     let mut cache = Simulator::init();
     let mut trace_len: u64 = 0;
@@ -192,9 +191,6 @@ fn get_sum(input:&Vec<u64>) -> u128{
 }
 
 
-
-
-
 fn get_overalloc_area(input:Vec<u64>, fcs:u64, length:usize) -> f64{
 
     let mut prba:Vec<f64> = vec![0.0;length];
@@ -213,9 +209,7 @@ fn get_overalloc_area(input:Vec<u64>, fcs:u64, length:usize) -> f64{
 
     index = 0;
     let mut result = 0.0;
-    // for i in &input{
-    //     println!("{}   ---", i);
-    // }
+
 
     for key in &input{
         if input[index] as isize - fcs as isize > 0{
@@ -229,7 +223,6 @@ fn get_overalloc_area(input:Vec<u64>, fcs:u64, length:usize) -> f64{
 
     return result;
 }
-
 
 
 fn input_to_hashmap() -> (HashMap<u64, f64>, usize) {
@@ -263,8 +256,6 @@ fn write(output: Vec<u64>){
 }
 
 
-
-
 fn main() {
 
     let test = input_to_hashmap();
@@ -272,17 +263,4 @@ fn main() {
     let test_1 = caching(Sampler::new(test.0.into_iter()), 10, 0.005, test.1);
     write(test_1);
 
-    // // for i in &test{
-    // //     println!("{}",i);
-    // // }
-    // println!("{}", get_overalloc_area(test_1, 10, test.1))
-
-
-
-    // println!(
-    //     "over_alloc: {}, trace_len: {}, div : {}",
-    //     over_alloc,
-    //     trace_len,
-    //     over_alloc / trace_len
-    // );
 }
