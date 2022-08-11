@@ -1,4 +1,3 @@
-use std::alloc::System;
 use rand::distributions::Distribution;
 use rand::distributions::WeightedIndex;
 use rand::prelude::ThreadRng;
@@ -64,55 +63,18 @@ impl Simulator {
         self.size -= self.tracker.remove(&self.step).unwrap_or(0);
     }
 
-    fn get_excess(&self, fixed: u64) -> u64 {
-        if self.size <= fixed {
-            0
-        } else {
-            self.size - fixed
-        }
-    }
 
     fn _get_size(&self) -> u64 {
         self.size
     }
 }
 
-fn get_distribution(inp:&Vec<u64>) -> Vec<f64>{
-    let sum = get_sum(inp);
-    let mut index:usize = 0;
-    let leng = inp.len();
-    let mut result:Vec<f64> = vec![0.0; leng];
-    while index < leng {
-        result[index] = (inp[index] as f64) / (sum as f64);
-        index += 1;
-    }
-    return result;
-}
 
 
-fn get_distribution_difference(a:&Vec<u64>, b:&Vec<u64>) -> f64{
-    let mut index = 0;
-    let leng = a.len();
-    let a_dist = get_distribution(a);
-    let b_dist = get_distribution(b);
-
-
-    let mut sum:f64 = 0.0;
-    while index < leng -1 {
-        let mut diff:f64 = a_dist[index] - b_dist[index];
-        sum += diff.abs();
-        index += 1;
-    }
-    return sum;
-}
-
-
-fn caching(ten_dist: Sampler, cache_size: u64, delta: f64, length:usize) -> Vec<u64> {\
+fn caching(ten_dist: Sampler, _cache_size: u64, _delta: f64, length:usize) -> Vec<u64> {
     let mut cache = Simulator::init();
-    let mut trace_len: u64 = 0;
-    let mut samples_to_issue: u64 = 1024;
+    let samples_to_issue: u64 = length as u64;
     let mut prev_output: Vec<u64> = vec![0; length + 1];
-    let mut total_overalloc: u64 = 0;
     let mut dcsd_observed = vec![0; length + 1];
     let mut time = 0;
     loop {
@@ -133,25 +95,14 @@ fn caching(ten_dist: Sampler, cache_size: u64, delta: f64, length:usize) -> Vec<
             return dcsd_observed.clone();
         }
         for _ in 0..samples_to_issue -1 {
-            trace_len += 1;
             let tenancy = ten_dist.sample();
             cache.add_tenancy(tenancy);
-            total_overalloc += cache.get_excess(cache_size);
             dcsd_observed[cache.size as usize] += 1;
         }
 
         prev_output = dcsd_observed.clone();
         cycles += 1;
     }
-}
-
-
-fn copy_vector(input:&Vec<u64>) -> Vec<u64>{
-    let mut output:Vec<u64> = vec![];
-    for i in input{
-        output.push(*i);
-    }
-    return output;
 }
 
 
@@ -169,40 +120,6 @@ fn get_sum(input:&Vec<u64>) -> u128{
         return 1;
     }
     return sum;
-}
-
-
-fn get_overalloc_area(input:Vec<u64>, fcs:u64, length:usize) -> f64{
-
-    let mut prba:Vec<f64> = vec![0.0;length];
-    let mut index:usize = 0;
-
-    let sum = get_sum(&input);
-
-    index = 0;
-    for key in &input{
-        prba[index] = (*key as f64) / sum as f64;
-        if index == prba.len(){
-            break;
-        }
-        index += 1;
-    }
-
-    index = 0;
-    let mut result = 0.0;
-
-
-    for key in &input{
-        if input[index] as isize - fcs as isize > 0{
-            result += (input[index] - fcs) as f64 * (prba[index]);
-        }
-        if index == input.len(){
-            break;
-        }
-        index += 1;
-    }
-
-    return result;
 }
 
 
